@@ -17,7 +17,7 @@ class Geometry
      * @param $radius
      * @return float|int
      */
-    public static function getCircleСircuit($radius)
+    public static function getCircleCircuit($radius)
     {
         return 2 * self::$pi * $radius;
     }
