@@ -1,5 +1,5 @@
 <?php
 /*
- * Объявление конструктора в интерфейсею
+ * Объявление конструктора в интерфейсе.
  * http://code.mu/ru/php/book/oop/interfaces/constructor/
  */
