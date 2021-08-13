@@ -26,6 +26,6 @@ class Rectangle extends Figure
      */
     public function getPerimeter(): float|int
     {
-        return (2 * $this->a) + (2 * $this->b);
+        return 2 * ($this->a + $this->b);
     }
 }
