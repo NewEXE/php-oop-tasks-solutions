@@ -1,9 +1,8 @@
 <?php
 
 /*
- * Задача 41.3
- * Создайте несколько объектов класса Quadrate, несколько объектов класса Rectangle и несколько объектов класса Cube.
- * Запишите их в массив $arr в случайном порядке.
+ * Несколько интерфейсов.
+ * http://code.mu/ru/php/book/oop/interfaces/implementation-of-several-interfaces/
  */
 
 /*
