@@ -1,5 +1,7 @@
 <?php
 
+require_once 'iFile.php';
+
 class File implements iFile
 {
     /**
