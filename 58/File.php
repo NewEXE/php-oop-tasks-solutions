@@ -1,5 +1,10 @@
 <?php
 
+/*
+ * Задача 58.1
+ * Реализуйте описанный класс в соответствии с интерфейсом. Проверьте работу вашего класса.
+ */
+
 require_once 'iFile.php';
 
 class File implements iFile
@@ -10,21 +15,26 @@ class File implements iFile
     private string $filePath;
 
     /**
-     * @var array dirname, basename, extension (optional), filename
+     * @var array {
+     *     An associative array of file path parts (pathinfo() result).
+     *     @see pathinfo()
+     *
+     *     @type string[] {
+     *         @type string $dirname
+     *         @type string $basename
+     *         @type string $extension
+     *         @type string $filename
+     *     }
+     * }
      */
-    private $pathParts = [];
+    private array $pathParts;
 
     /**
-     * @param string $filePath
+     * @param string $filePath Absolute or relative path to file.
      */
     public function __construct($filePath)
     {
-        if (!$this->isFilePathValid($filePath)) {
-            die('Invalid file path');
-        }
-
-        $this->filePath = $filePath;
-
+        $this->setFilePath($filePath);
         $this->resolvePathParts();
     }
 
@@ -57,7 +67,7 @@ class File implements iFile
      */
     public function getExt()
     {
-        return $this->pathParts['extension'] ?? '';
+        return $this->pathParts['extension'];
     }
 
     /**
@@ -117,15 +127,16 @@ class File implements iFile
      */
     public function rename($newName)
     {
-        return rename($this->filePath, $newName);
+        return rename($this->filePath, $this->getDir() . DIRECTORY_SEPARATOR . $newName);
     }
 
     /**
      * @param string $newPath
+     * @return bool
      */
     public function replace($newPath)
     {
-        $this->rename($newPath);
+        return rename($this->filePath, $newPath);
     }
 
     /**
@@ -137,8 +148,24 @@ class File implements iFile
         return file_exists($filePath);
     }
 
+    /**
+     * @param string $filePath
+     */
+    private function setFilePath(string $filePath)
+    {
+        if (!$this->isFilePathValid($filePath)) {
+            die('Invalid file path');
+        }
+
+        $this->filePath = realpath($filePath);
+    }
+
     private function resolvePathParts()
     {
         $this->pathParts = pathinfo($this->filePath);
+
+        if (!isset($this->pathParts['extension'])) {
+            $this->pathParts['extension'] = '';
+        }
     }
 }
