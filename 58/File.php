@@ -15,6 +15,11 @@ class File implements iFile
     private string $filePath;
 
     /**
+     * @var bool
+     */
+    private bool $isDeleted = false;
+
+    /**
      * @var array {
      *     An associative array of file path parts (pathinfo() result).
      *     @see pathinfo()
@@ -35,7 +40,6 @@ class File implements iFile
     public function __construct($filePath)
     {
         $this->setFilePath($filePath);
-        $this->resolvePathParts();
     }
 
     /**
@@ -75,6 +79,10 @@ class File implements iFile
      */
     public function getSize()
     {
+        if ($this->isDeleted) {
+            return 0;
+        }
+
         return filesize($this->filePath);
     }
 
@@ -83,6 +91,10 @@ class File implements iFile
      */
     public function getText()
     {
+        if ($this->isDeleted) {
+            return '';
+        }
+
         return file_get_contents($this->filePath);
     }
 
@@ -92,7 +104,13 @@ class File implements iFile
      */
     public function setText($text)
     {
-        return file_put_contents($this->filePath, $text);
+        $bytesWritten = file_put_contents($this->filePath, $text);
+
+        if ($bytesWritten > 0) {
+            $this->isDeleted = false;
+        }
+
+        return $bytesWritten;
     }
 
     /**
@@ -101,7 +119,13 @@ class File implements iFile
      */
     public function appendText($text)
     {
-        return file_put_contents($this->filePath, $text, FILE_APPEND);
+        $bytesWritten = file_put_contents($this->filePath, $text, FILE_APPEND);
+
+        if ($bytesWritten > 0) {
+            $this->isDeleted = false;
+        }
+
+        return $bytesWritten;
     }
 
     /**
@@ -110,6 +134,10 @@ class File implements iFile
      */
     public function copy($copyPath)
     {
+        if ($this->isDeleted) {
+            return false;
+        }
+
         return copy($this->filePath, $copyPath);
     }
 
@@ -118,7 +146,17 @@ class File implements iFile
      */
     public function delete()
     {
-        return unlink($this->filePath);
+        if ($this->isDeleted) {
+            return true;
+        }
+
+        $isDeleted = unlink($this->filePath);
+
+        if ($isDeleted) {
+            $this->isDeleted = true;
+        }
+
+        return $isDeleted;
     }
 
     /**
@@ -127,7 +165,9 @@ class File implements iFile
      */
     public function rename($newName)
     {
-        return rename($this->filePath, $this->getDir() . DIRECTORY_SEPARATOR . $newName);
+        $newPath = $this->getDir() . DIRECTORY_SEPARATOR . $newName;
+
+        return $this->replace($newPath);
     }
 
     /**
@@ -136,16 +176,17 @@ class File implements iFile
      */
     public function replace($newPath)
     {
-        return rename($this->filePath, $newPath);
-    }
+        if ($this->isDeleted) {
+            return false;
+        }
 
-    /**
-     * @param string $filePath
-     * @return bool
-     */
-    private function isFilePathValid(string $filePath): bool
-    {
-        return file_exists($filePath);
+        $isRenamed = rename($this->filePath, $newPath);
+
+        if ($isRenamed) {
+            $this->setFilePath($newPath);
+        }
+
+        return $isRenamed;
     }
 
     /**
@@ -153,11 +194,13 @@ class File implements iFile
      */
     private function setFilePath(string $filePath)
     {
-        if (!$this->isFilePathValid($filePath)) {
-            die('Invalid file path');
+        if (!file_exists($filePath)) {
+            die("File not exists by path $filePath");
         }
 
         $this->filePath = realpath($filePath);
+
+        $this->resolvePathParts();
     }
 
     private function resolvePathParts()
